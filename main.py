@@ -9,7 +9,7 @@ from selenium.webdriver.common.by import By
 import time
 from bs4 import BeautifulSoup as Soup
 import os
-from module import PC,function
+from module import PC,function,H5
 from webdriver_manager.chrome import ChromeDriverManager
 from datetime import datetime
 
@@ -18,14 +18,18 @@ from datetime import datetime
 now = str(datetime.now().strftime("%m%d_%H_%M")) 
 if not os.path.exists(".\\output\\" + now):
         os.mkdir(".\\output\\" + now)
-url = 'https://www.bsportstest.com/'  
+excel = function.create_excel(now)
 
 browser = webdriver.Chrome(ChromeDriverManager().install())
-browser.get(url)
 
+language = "ENG"
 
 if __name__ == '__main__' :
-        currency = PC.login("coreyegp1","1qaz2wsx",browser)
-        PC.PG_Automation(now,currency,browser)
+        currency = H5.login("coreyegp1","1qaz2wsx",browser)
+        H5.language(language,currency,browser)
+        H5.PG_Automation(now,currency,excel,browser)
 
+        currency = PC.login("coreyegp1","1qaz2wsx",browser)
+        PC.language(language,currency,browser)
+        PC.PG_Automation(now,currency,excel,browser)
 

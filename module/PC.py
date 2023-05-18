@@ -13,6 +13,8 @@ from datetime import datetime
 from module import function
 
 def login(account,password,browser):
+    url = 'https://www.bsportstest.com/'  
+    browser.get(url)
     #點擊右上角登入
     WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CLASS_NAME,'login')))
     browser.find_element(By.CLASS_NAME,'login').click()
@@ -38,23 +40,45 @@ def login(account,password,browser):
     return currency
 
 def language(language_type,currency,browser):
+    WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CLASS_NAME, 'lang-selected')))
     browser.find_elements(By.CLASS_NAME,"lang-selected")[0].click()
+    WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CLASS_NAME, 'lang-list')))
     class_list = browser.find_element(By.CLASS_NAME,"lang-list")
     divs = class_list.find_elements(By.CSS_SELECTOR,"div")
-    if language_type == 'Chinese':
-        divs[1].click()
-    elif language_type == 'English' or language_type == 'Eng':
-        divs[2].click()
-    elif language_type == 'Viet':
-        divs[3].click()
-    elif language_type == 'Thai':
-        divs[4].click()
+    main = ['CNY','VND','THB','USDT','MYR']
+    if currency in main:
+        if language_type.lower() == 'chinese':
+            divs[0].click()
+        elif language_type.lower() == 'english' or language_type == 'eng':
+            divs[1].click()
+        elif language_type.lower() == 'viet':
+            divs[2].click()
+        elif language_type.lower() == 'thai':
+            divs[3].click()
+    elif currency in "BRL":
+        if language_type.lower() == 'english' or language_type.lower() == 'eng':
+            divs[0].click()
+        elif language_type.lower() == 'brasil':
+            divs[1].click()
+    elif currency in "MXN":
+        if language_type.lower() == 'english' or language_type.lower() == 'eng':
+            divs[0].click()
+        elif language_type.lower() == 'espanol':
+            divs[1].click()
+    elif currency in "EGP":
+        if language_type.lower() == 'english' or language_type.lower() == 'eng':
+            divs[0].click()
+        elif language_type.lower() == 'arabic':
+            divs[1].click()
+
     
 
-def PG_Automation(now,currency,browser):
+def PG_Automation(now,currency,excel,browser):
     #init
-    sheet = function.get_sheet(now,"PC_PG")
-
+    sheet = function.get_sheet(excel,"PC_PG")
+    row = function.checkrow(sheet)
+    sheet.range('A'+str(i+3)).value = name[i]
+    sheet.range(row+str(1)).value = 'PG_'+currency
     #跳轉PG電子
     browser.get("https://www.bsportstest.com/digital?gameId=38001&channelId=38&gameType=3&platFormId=38003&gameName=PG%E7%94%B5%E5%AD%90")
     
@@ -67,7 +91,7 @@ def PG_Automation(now,currency,browser):
     name = [game_name[i].text for i in range(0, game_count)]
 
     #進入各場館
-    for i in range(31,game_count):
+    for i in range(0,game_count):
         #調整網頁進入遊戲場館
         WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CLASS_NAME,"game-item")))
         browser.execute_script("arguments[0].click();", browser.find_elements(By.CLASS_NAME,"game-item")[i])
@@ -77,6 +101,8 @@ def PG_Automation(now,currency,browser):
         browser.switch_to.window(browser.window_handles[1])
         browser.set_window_size(1024, 768)
 
+        #寫入場館遊戲名稱
+        sheet.range('A'+str(i+3)).value = name[i]
         try:
 
             try:
@@ -96,52 +122,52 @@ def PG_Automation(now,currency,browser):
             browser.get_screenshot_as_file('.\\output\\'+now+'\\'+ name[i] +".jpg")
             time.sleep(0.5)
             #獲取帳戶餘額
-            ActionChains(browser).move_to_element_with_offset(canvas,80,620).click().perform()
-            time.sleep(1)
-            for y in range(620,400,-20):
-                ActionChains(browser).move_to_element_with_offset(canvas,80,y).click().perform()
-            time.sleep(5)
-            try:  
-                balance = browser.find_elements(By.CLASS_NAME,"sc-breuTD")[1].text
-                balance  = int(''.join(re.findall(r'\d+',balance)))
-                #balance  = int(''.join(re.findall(r'\d+', balance.split('.')[0])))
-            except:                  
-                for y in range(620,400,-20):
-                    ActionChains(browser).move_to_element_with_offset(canvas,80,y).click().perform()
-                time.sleep(5)
-                balance = browser.find_elements(By.CLASS_NAME,"sc-breuTD")[1].text
-                balance  = int(''.join(re.findall(r'\d+', balance.split('.')[0])))
+            attempt = 1
+            while attempt <= 5:
+                try:
+                    for y in range(620,400,-20):
+                        ActionChains(browser).move_to_element_with_offset(canvas,80,y).click().perform()
+                    time.sleep(5)
+                    balance = browser.find_elements(By.CLASS_NAME,"sc-breuTD")[1].text
+                    balance  = int(''.join(re.findall(r'\d+',balance2)))
+                    break
+                except :
+                    attempt += 1
 
             ActionChains(browser).move_to_element_with_offset(canvas,100,100).click().perform()
             time.sleep(2)
 
             #點擊投注按鈕
-            for _ in range(0,10):
+            for _ in range(0,5):
                 ActionChains(browser).move_to_element_with_offset(canvas,180,560).click().perform()
                 time.sleep(5)
             time.sleep(5)
 
             #再次獲取帳戶餘額
-            for y in range(620,400,-20):
-                ActionChains(browser).move_to_element_with_offset(canvas,80,y).click().perform()
-            time.sleep(5)
-            balance2 = browser.find_elements(By.CLASS_NAME,"sc-breuTD")[1].text
-            balance2  = int(''.join(re.findall(r'\d+',balance2)))
-            #balance2  = int(''.join(re.findall(r'\d+', balance2.split('.')[0])))
-            
+            attempt = 1
+            balance2 = balance
+            while attempt <= 5:
+                try:
+                    for y in range(620,400,-20):
+                        ActionChains(browser).move_to_element_with_offset(canvas,80,y).click().perform()
+                    time.sleep(5)
+                    balance2 = browser.find_elements(By.CLASS_NAME,"sc-breuTD")[1].text
+                    balance2  = int(''.join(re.findall(r'\d+',balance2)))
+                    break
+                except :
+                    attempt += 1
+
+            #關閉遊戲網頁
             browser.close()
             browser.switch_to.window(browser.window_handles[0])
             time.sleep(3)
             #寫入資料
-            sheet.range('A'+str(i+3)).value = name[i]
-            if balance2 != balance:
-                sheet.range('B'+str(i+3)).value = "PASS"
+            if balance2 != balance :
+                sheet.range(row+str(i+3)).value = "PASS"
             else:   
-                sheet.range('B'+str(i+3)).value = "balance error"
+                sheet.range(row+str(i+3)).value = "balance error"
 
-        except Exception as e:
-            print(f"發生錯誤：{str(e)}")
+        except :
             browser.close()
             browser.switch_to.window(browser.window_handles[0])
-            sheet.range('A'+str(i+3)).value = name[i]
-            sheet.range('B'+str(i+3)).value = "error"
+            sheet.range(row+str(i+3)).value = "error"

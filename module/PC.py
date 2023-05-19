@@ -91,7 +91,16 @@ def PG_Automation(now,currency,language,excel,browser):
     name = [game_name[i].text for i in range(0, game_count)]
 
     #進入各場館
-    for i in range(63,game_count):
+    for i in range(0,len(game_name)):
+        #獲取餘額
+        browser.set_window_size(1200, 1000)
+        WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CLASS_NAME, 'refresh-icon')))
+        browser.execute_script("arguments[0].click();", browser.find_element(By.CLASS_NAME, 'refresh-icon'))
+        time.sleep(8)
+        balance = browser.find_element(By.CLASS_NAME, 'integer').text + browser.find_element(By.CLASS_NAME, 'dot').text
+        balance = int(''.join(re.findall(r'\d+',balance)))
+
+
         #調整網頁進入遊戲場館
         WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CLASS_NAME,"game-item")))
         browser.execute_script("arguments[0].click();", browser.find_elements(By.CLASS_NAME,"game-item")[i])
@@ -108,7 +117,7 @@ def PG_Automation(now,currency,language,excel,browser):
                 time.sleep(20)
                 if browser.find_element(By.ID,'ca-button-0'):
                     browser.find_element(By.ID,'ca-button-0').click()
-                    sheet.range('B'+str(2)).value = "have free game"
+                    sheet.range('B'+str(2)).value = browser.find_element(By.CLASS_NAME,'message message_padding ').text
             except:
                 pass
             #等待開始按鈕並點擊
@@ -118,23 +127,10 @@ def PG_Automation(now,currency,language,excel,browser):
             #獲得canvas
             WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CLASS_NAME,"gameCanvas")))
             canvas = browser.find_element(By.CLASS_NAME,"gameCanvas")
-            browser.get_screenshot_as_file('.\\output\\'+now+'\\'+ name[i] +".jpg")
+            if not os.path.exists('.\\output\\'+now+'\\KAG_'+currency +"_" + language ):
+                os.mkdir('.\\output\\'+now+'\\KAG_'+currency +"_" + language)
+            browser.get_screenshot_as_file('.\\output\\'+now+'\\PC_PG_'+currency +"_" + language +"\\" + name[i] +".png")
             time.sleep(0.5)
-            #獲取帳戶餘額
-            attempt = 1
-            while attempt <= 5:
-                try:
-                    for y in range(620,400,-20):
-                        ActionChains(browser).move_to_element_with_offset(canvas,80,y).click().perform()
-                    time.sleep(5)
-                    balance = browser.find_elements(By.CLASS_NAME,"sc-breuTD")[1].text
-                    balance  = int(''.join(re.findall(r'\d+',balance2)))
-                    break
-                except :
-                    attempt += 1
-
-            ActionChains(browser).move_to_element_with_offset(canvas,100,100).click().perform()
-            time.sleep(2)
 
             #點擊投注按鈕
             for _ in range(0,3):
@@ -142,24 +138,19 @@ def PG_Automation(now,currency,language,excel,browser):
                 time.sleep(5)
             time.sleep(5)
 
-            #再次獲取帳戶餘額
-            attempt = 1
-            balance2 = balance
-            while attempt <= 5:
-                try:
-                    for y in range(620,400,-20):
-                        ActionChains(browser).move_to_element_with_offset(canvas,80,y).click().perform()
-                    time.sleep(5)
-                    balance2 = browser.find_elements(By.CLASS_NAME,"sc-breuTD")[1].text
-                    balance2  = int(''.join(re.findall(r'\d+',balance2)))
-                    break
-                except :
-                    attempt += 1
 
             #關閉遊戲網頁
             browser.close()
             browser.switch_to.window(browser.window_handles[0])
             time.sleep(3)
+
+            #獲取餘額
+            browser.set_window_size(1200, 1000)
+            WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CLASS_NAME, 'refresh-icon')))
+            browser.execute_script("arguments[0].click();", browser.find_element(By.CLASS_NAME, 'refresh-icon'))
+            time.sleep(8)
+            balance2= browser.find_element(By.CLASS_NAME, 'integer').text + browser.find_element(By.CLASS_NAME, 'dot').text
+            balance2 = int(''.join(re.findall(r'\d+',balance2)))
             #寫入資料
             if balance2 != balance :
                 sheet.range(row+str(i+3)).value = "PASS"
@@ -167,6 +158,96 @@ def PG_Automation(now,currency,language,excel,browser):
                 sheet.range(row+str(i+3)).value = "balance error"
 
         except Exception as e:
+            browser.close()
+            browser.switch_to.window(browser.window_handles[0])
+            sheet.range(row+str(i+3)).value = "error"
+
+
+def KAG_Automation(now,currency,language,excel,browser):
+    #init
+    sheet = function.get_sheet(excel,"PC_KAG")    
+    row = function.checkrow(sheet)
+    sheet.range(row+str(1)).value = currency + "_" + language
+    #跳轉KAG電子
+    browser.get("https://www.bsportstest.com/digital?gameId=76001&channelId=76&gameType=3&platFormId=76003&gameName=KA%20%D9%85%D8%A7%D9%83%D9%8A%D9%86%D8%A7%D8%AA%20%D9%82%D9%85%D8%A7%D8%B1")
+
+    #計算場館數量
+    browser.set_window_size(3000, 3000)
+    WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CLASS_NAME, 'game-item')))
+    game_count = len(browser.find_elements(By.CLASS_NAME,"game-item"))
+    game_name = browser.find_elements(By.CSS_SELECTOR,'h3.title')  
+    name = [game_name[i].text for i in range(0, game_count)]
+
+     #進入各場館
+    for i in range(0,len(game_name)):
+        #獲取餘額
+        browser.set_window_size(1200, 1000)
+        WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CLASS_NAME, 'refresh-icon')))
+        browser.execute_script("arguments[0].click();", browser.find_element(By.CLASS_NAME, 'refresh-icon'))
+        time.sleep(8)
+        balance = browser.find_element(By.CLASS_NAME, 'integer').text + browser.find_element(By.CLASS_NAME, 'dot').text
+        balance = int(''.join(re.findall(r'\d+',balance)))
+
+        #調整網頁進入遊戲場館
+        WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CLASS_NAME,"game-item")))
+        browser.execute_script("arguments[0].click();", browser.find_elements(By.CLASS_NAME,"game-item")[i])
+        browser.execute_script("arguments[0].click();", browser.find_elements(By.CLASS_NAME,"play-btn")[i])
+
+        #調整畫面，並選擇遊戲場館頁面
+        browser.switch_to.window(browser.window_handles[1])
+        browser.set_window_size(1024, 768)
+
+        #寫入場館遊戲名稱
+        sheet.range('A'+str(i+3)).value = name[i]
+        try:
+            try:
+                time.sleep(20)
+                if browser.find_element(By.ID,'ca-button-0'):
+                    browser.find_element(By.ID,'ca-button-0').click()
+                    sheet.range('B'+str(2)).value = browser.find_element(By.CLASS_NAME,'message_padding').text
+            except:
+                pass
+
+            #獲得canvas
+            WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CLASS_NAME,"gameCanvas")))
+            canvas = browser.find_element(By.CLASS_NAME,"gameCanvas")
+            time.sleep(15)
+            if not os.path.exists('.\\output\\'+now+'\\KAG_'+currency +"_" + language ):
+                os.mkdir('.\\output\\'+now+'\\KAG_'+currency +"_" + language)
+            browser.get_screenshot_as_file('.\\output\\'+now+'\\PC_KAG_'+currency +"_" + language +"\\" + name[i] +".png")
+            time.sleep(3)
+
+            #點擊最低投注額按鈕
+            ActionChains(browser).move_to_element_with_offset(canvas,636,504).click().perform()
+
+            #點擊投注按鈕
+            for _ in range(0,10):
+                ActionChains(browser).move_to_element_with_offset(canvas,506,580).click().perform()
+                time.sleep(5)
+            time.sleep(5)
+
+            #關閉遊戲網頁
+            browser.close()
+            browser.switch_to.window(browser.window_handles[0])
+            time.sleep(3)
+
+            #獲取投注後餘額
+            WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CLASS_NAME, 'refresh-icon')))
+            browser.execute_script("arguments[0].click();", browser.find_element(By.CLASS_NAME, 'refresh-icon'))
+            time.sleep(8)
+            balance2 = browser.find_element(By.CLASS_NAME, 'integer').text + browser.find_element(By.CLASS_NAME, 'dot').text
+            balance2 = int(''.join(re.findall(r'\d+',balance2)))
+
+            #寫入資料
+            print(balance2)
+            print(balance)
+            if balance2 != balance :
+                sheet.range(row+str(i+3)).value = "PASS"
+            else:   
+                sheet.range(row+str(i+3)).value = "balance error"
+
+        except Exception as e:
+            print(e)
             browser.close()
             browser.switch_to.window(browser.window_handles[0])
             sheet.range(row+str(i+3)).value = "error"

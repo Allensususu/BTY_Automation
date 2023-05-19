@@ -25,11 +25,7 @@ browser = webdriver.Chrome(ChromeDriverManager().install())
 language = "ENG"
 
 if __name__ == '__main__' :
-        currency = H5.login("coreyegp1","1qaz2wsx",browser)
-        H5.language(language,currency,browser)
-        H5.PG_Automation(now,currency,excel,browser)
-
         currency = PC.login("coreyegp1","1qaz2wsx",browser)
         PC.language(language,currency,browser)
-        PC.PG_Automation(now,currency,excel,browser)
+        PC.PG_Automation(now,currency,language,excel,browser)
 

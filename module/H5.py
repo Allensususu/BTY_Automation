@@ -74,14 +74,11 @@ def language(language_type,currency,browser):
             browser.execute_script("arguments[0].click();",divs[6])  
 
 
-def PG_Automation(now,currency,excel,browser):
+def PG_Automation(now,currency,language,excel,browser):
     #init
     sheet = function.get_sheet(excel,"H5_PG")    
     row = function.checkrow(sheet)
-    sheet.range('A'+str(i+3)).value = name[i]
-    sheet.range(row+str(1)).value = 'PG_'+currency
-    #跳轉PG電子
-
+    sheet.range(row+str(1)).value = currency + "_" + language
     #跳轉PG電子
     browser.get("https://m.bsportstest.com/digital?gameId=38001&channelId=38&gameType=3&platFormId=38003&gameName=PG%E7%94%B5%E5%AD%90")
     

@@ -33,13 +33,14 @@ def login(account,password,browser):
     #點擊登入
     WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CLASS_NAME,"el-button--primary")))
     browser.find_elements(By.CLASS_NAME,"el-button--primary")[0].click()
-    time.sleep(0.5)
+    time.sleep(3)
 
     WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CLASS_NAME,'bi')))
     currency = browser.find_element(By.CLASS_NAME, 'bi').get_attribute('alt')
     return currency
 
 def language(language_type,currency,browser):
+    browser.set_window_size(3000, 3000)
     WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CLASS_NAME, 'lang-selected')))
     browser.find_elements(By.CLASS_NAME,"lang-selected")[0].click()
     WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CLASS_NAME, 'lang-list')))
@@ -73,12 +74,11 @@ def language(language_type,currency,browser):
 
     
 
-def PG_Automation(now,currency,excel,browser):
+def PG_Automation(now,currency,language,excel,browser):
     #init
     sheet = function.get_sheet(excel,"PC_PG")
     row = function.checkrow(sheet)
-    sheet.range('A'+str(i+3)).value = name[i]
-    sheet.range(row+str(1)).value = 'PG_'+currency
+    sheet.range(row+str(1)).value = currency  + "_" + language
     #跳轉PG電子
     browser.get("https://www.bsportstest.com/digital?gameId=38001&channelId=38&gameType=3&platFormId=38003&gameName=PG%E7%94%B5%E5%AD%90")
     
@@ -91,7 +91,7 @@ def PG_Automation(now,currency,excel,browser):
     name = [game_name[i].text for i in range(0, game_count)]
 
     #進入各場館
-    for i in range(0,game_count):
+    for i in range(63,game_count):
         #調整網頁進入遊戲場館
         WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CLASS_NAME,"game-item")))
         browser.execute_script("arguments[0].click();", browser.find_elements(By.CLASS_NAME,"game-item")[i])
@@ -104,7 +104,6 @@ def PG_Automation(now,currency,excel,browser):
         #寫入場館遊戲名稱
         sheet.range('A'+str(i+3)).value = name[i]
         try:
-
             try:
                 time.sleep(20)
                 if browser.find_element(By.ID,'ca-button-0'):
@@ -138,7 +137,7 @@ def PG_Automation(now,currency,excel,browser):
             time.sleep(2)
 
             #點擊投注按鈕
-            for _ in range(0,5):
+            for _ in range(0,3):
                 ActionChains(browser).move_to_element_with_offset(canvas,180,560).click().perform()
                 time.sleep(5)
             time.sleep(5)
@@ -167,7 +166,7 @@ def PG_Automation(now,currency,excel,browser):
             else:   
                 sheet.range(row+str(i+3)).value = "balance error"
 
-        except :
+        except Exception as e:
             browser.close()
             browser.switch_to.window(browser.window_handles[0])
             sheet.range(row+str(i+3)).value = "error"
